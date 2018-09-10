@@ -1057,63 +1057,134 @@ var tagCount = function(tag, node = document.documentElement) {
 
 };
 
-// if you are ever calling for loop in a for loop or childnodes.childnodes you are
-// too deep, the recurssion has to happen at a higher level
-// var tagCount = function(tag, node = document.documentElement) {
-
-//     var count = 0;
-//     console.log('this is node', node);
-//     console.log('the root nodes children nodes', node.childNodes); // head, text, body
-//     console.log(node.childNodes.length); // gives 3
-
-//     if (node.childNodes){
-
-//         if (node.childNodes.length === 0) return 0;
-//         if (node.childNodes.length > 0){
-    
-//             // check the first child for the tag 
-//             if (node.childNodes[0].nodeName === tag.toUpperCase()){
-//                 count ++; 
-//             }
-    
-//             // check to see if the first child has children of its own, if so, check them
-//             if (node.childNodes[0].childNodes.length > 0){
-//                 count = count + tagCount(tag, node.childNodes[0].childNodes);
-//                 // calling tag count on childNodes, but it's only set up to take one node
-//             }
-    
-//             // check the rest of the first level children
-//             count = count + tagCount(node.childNodes.slice(1));
-    
-//         }
-
-//     }
-
-//     return count;
-
-
-// };
-
-// not seeming to include the html node, document.documentElements jumps straight inside html,
-// so may need to add that in as well as the tag for doctype, though the tests don't seem to ask for that
-
 // 38. Write a function for binary search.
 // var array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 // binarySearch(array, 5) // 5
 // https://www.khanacademy.org/computing/computer-science/algorithms/binary-search/a/binary-search
-var binarySearch = function(array, target, min, max) {
+
+// base case is when there is only one number left in the array
+// in each turn you choose a guess that divides the set of reasonalbe guesses into two ranges of roughly the same size
+// returns if it is too high or too low; allows you to eliminate about half ot he reasonable guesses
+// should guess half way between the mix and max to divide in two; min + max / 2 = halfway point/your guess 
+
+// inputs: the array we are searching, the value we're looking for, the min index for searching range, the max index for searching range
+// output: index where the target is located in the array
+
+var binarySearch = function(array, target, min = 0, max = array.length - 1) {
+    let currentGuess = Math.floor((min + max)/2);
+    
+    if (array[currentGuess] === target){
+        return array.indexOf(array[currentGuess]);
+    }
+    
+    if (min === max) return null;
+        
+    if (target < array[currentGuess]){
+        return binarySearch(array, target, min, currentGuess - 1); 
+    }
+        
+    if (target > array[currentGuess]){
+        return binarySearch(array, target, currentGuess + 1, max);
+    } else {
+        return null;
+    }
+
 };
+
+// var test5 = binarySearch([-4,-3,-2,-1,0,1,2,3], -2); // 2
+// test5
+// var test4 = binarySearch([-4,-3,-2,-1,0,1,2,3], 2); // 6
+// test4
+// var test3 = binarySearch([-5,-4,-3,-2,-1], -2); // 3
+// test3
+// var firstTestArr = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+// var test1 = binarySearch(firstTestArr, 5); // 5
+// test1
+// var test2 = binarySearch([1,2,3,4,5,6], 8); // null
+// test2
 
 // 39. Write a merge sort function.
 // mergeSort([34,7,23,32,5,62]) // [5,7,23,32,34,62]
 // https://www.khanacademy.org/computing/computer-science/algorithms/merge-sort/a/divide-and-conquer-algorithms
+
+// input is an unsorted array
+// output is the array sorted
+
+// reasoning: it's easier to sort to sorted arrays than one unsorted one
+// once we have the 2 sorted arrays, we'll compare the items one by one and add the smaller one first in the
+// result array
+
 var mergeSort = function(array) {
+    
+    if (array.length === 0 || array.length === 1) return array;
+
+    let middle = Math.floor((0 + array.length - 1) / 2);
+    let leftHalf = array.slice(0, middle + 1);
+    let rightHalf = array.slice(middle + 1);
+
+    return merge(mergeSort(leftHalf), mergeSort(rightHalf));
+    
 };
 
+function merge (left, right) {
+    let result = []
+    let indexLeft = 0
+    let indexRight = 0
+  
+    while (indexLeft < left.length && indexRight < right.length) {
+      if (left[indexLeft] < right[indexRight]) {
+        result.push(left[indexLeft])
+        indexLeft++
+      } else {
+        result.push(right[indexRight])
+        indexRight++
+      }
+    }
+  
+    return result.concat(left.slice(indexLeft)).concat(right.slice(indexRight))
+  } // will merge two sorted arrays into one
+
+
 // 40. Deeply clone objects and arrays.
+
 // var obj1 = {a:1,b:{bb:{bbb:2}},c:3};
 // var obj2 = clone(obj1);
 // console.log(obj2); // {a:1,b:{bb:{bbb:2}},c:3}
-// obj1 === obj2 // false
+// obj1 === obj2 // false b/c as opposed to reguarly shallow copy by reference, obj2 has it's own allocation to memory
 var clone = function(input) {
+    if (Array.isArray(input)){
+        if (input.length === 0) return input;
+        
+        var resultArr = [];
+        
+        input.forEach((ele, index, arr) => {
+            if (typeof ele === 'number' || typeof ele === 'string' || ele === null 
+            || ele === undefined || typeof ele === 'boolean'){ // if these data types, do copy by value, regularly
+                resultArr.push(ele);
+            } else if (Array.isArray(ele) || typeof ele === 'object'){
+                resultArr.push(clone(ele));
+            } 
+        });
+
+        return resultArr;
+
+    } else {
+
+        if (Object.keys(input).length === 0) return input;
+        
+        var resultObj = {};
+    
+        for (var key in input){
+            if (typeof input[key] === 'number' || typeof input[key] === 'string' || input[key] === null || input[key] === undefined || typeof input[key] === 'boolean'){ // if these data types, do copy by value, regularly
+                resultObj[key] = input[key];
+            } else if (Array.isArray(input[key]) || typeof input[key] === 'object'){
+                console.log(input[key]); 
+                resultObj[key] = clone(input[key]);
+            }
+        }
+
+        return resultObj;
+    }
+
 };
+
